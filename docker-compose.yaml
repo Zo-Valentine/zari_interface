@@ -1,12 +1,16 @@
+version: '3.8'
+
 services:
   ollama:
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    container_name: ollama
     volumes:
       - ollama:/root/.ollama
-    container_name: ollama
-    pull_policy: always
+    ports:
+      - "172.233.148.211:8081:8081"   # Bind ollama container to 8081 on server IP
     tty: true
     restart: unless-stopped
-    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    pull_policy: always
 
   open-webui:
     build:
@@ -19,11 +23,11 @@ services:
     volumes:
       - open-webui:/app/backend/data
     depends_on:
-      - ollama
+      - ollama  # Ensures open-webui starts after ollama
     ports:
-      - ${OPEN_WEBUI_PORT-3000}:8080
+      - "172.233.148.211:8080:8080"  # Bind open-webui container to 8080 on server IP
     environment:
-      - 'OLLAMA_BASE_URL=http://ollama:11434'
+      - 'OLLAMA_BASE_URL=http://ollama:8081'  # Communication with Ollama via Docker network
       - 'WEBUI_SECRET_KEY='
     extra_hosts:
       - host.docker.internal:host-gateway
